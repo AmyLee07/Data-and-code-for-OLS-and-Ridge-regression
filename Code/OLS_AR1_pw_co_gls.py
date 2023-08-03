@@ -1,40 +1,28 @@
 # -*- coding: utf-8 -*-
 
-#import netCDF4 as nc
 import numpy as np
-#import matplotlib.pyplot as plt
 import pandas as pd
-#from pandas import DataFrame
-#from sklearn import linear_model
 from sklearn.linear_model import LinearRegression 
 model=LinearRegression()
 import statsmodels.api as sm
-
-#from scipy import stats
 import pickle
-#from sklearn import linear_model
-#import xarray as xr
-#import multiprocessing as mp
-#print(mp.cpu_count())
-
 from warnings import filterwarnings
 filterwarnings('ignore')
-
 import time
 start_time=time.time()
 
-
+# read Xdata, Ydata
 def read(filename):
     with open(filename, 'rb') as f:
         data = pickle.load(f)
         f.close()
     return data    
 
+# save OLS regression results
 def write(data, outfile):
-        f = open(outfile, "w+b")
-        pickle.dump(data, f)
-        f.close()   
-
+    f = open(outfile, "w+b")
+    pickle.dump(data, f)
+    f.close()   
 
 # cochrane-orcutt / prais-winsten with given AR(1) rho, 
 # derived from ols model, default to cochrane-orcutt 
@@ -74,35 +62,33 @@ def OLSAR1(model,drop1=True):
     return(model1)
 
 
-
 yr1=1984
 yr2=2021
-
 x01=len(np.arange(1984,yr1))*12  
 x02=len(np.arange(1984,yr2))*12
 nn0=x02-x01
 xx1=len(np.arange(1984,1991))*12 
-
 dfdates = pd.date_range('01/01/'+str(yr1), '12/01/'+str(yr2-1), freq = 'MS')
 dfdate0 = dfdates
 
+# initializing
+## 77*3+1: including 77 coefficients, 77 standard errors, 1 goodness of fit(R2)
+## 27 pressure levels (146-1hPa), 66 lats (81S-81N)
 lindata0=np.zeros((77*3+1,27,66))  
 lindata1=np.zeros((77*3+1,27,66))  
 lindata2=np.zeros((77*3+1,27,66))  
-
-
 corr_1=np.zeros((27,66)) 
 corr_2=np.zeros((27,66)) 
 
-#PathIN='S:/Leeds/Python/OLSvRidge/SData/'  
+# relative path where Xdata and Ydata are
 PathIN='../SData/' 
-ename='MLTOMCAT' #'SWOOSH' # or'ERA5' #
+ename='SWOOSH' # or'ERA5' #'MLTOMCAT' #
 
 for ilev in range(27):
-    
+    # read Xdata
     data1=read(PathIN+'Xdata_7_1984_2020_77Params_era51_72lats_fz50_nh_sh_new.out')
     Xdata=np.squeeze(data1[x01:x02,ilev,:,:])
-    
+    # read Ydata
     if ename=='SWOOSH':
         data2=read(PathIN+'Ydata_2_1984_2020_dO3_SWOOSH_v7.nc')
     elif ename=='MLTOMCAT':
@@ -126,20 +112,15 @@ for ilev in range(27):
         train_x=X_0.dropna()
         train_y=Y_0.dropna()
 
-        # method 1 # (NO correction)
+        # OLS regression without AR1 correction
         X1 = sm.add_constant(train_x)
         model_ols = sm.OLS(train_y, X1).fit()
-
-       
         residuals =model_ols.resid
-        #corr_coeff_2 = pd.Series(residuals2.autocorr(lag=1))
-        #print(corr_coeff_2[0])    
-        #corr_2[ilev,ilat]=corr_coeff_2[0]
-        # or:
+        # auto-correlation without correction
         df1 = pd.DataFrame(residuals)
         df1_shift = df1.shift(1)
         corr_1[ilev,ilat]= df1[0].corr(df1_shift[0]) 
-        
+
 
         # AR(1) based on cochrane-orcutt iterative procedure   
         ar1_co = OLSAR1(model_ols)
@@ -148,8 +129,8 @@ for ilev in range(27):
         
         # AR(1) based on prais-winsten iterative procedure
         ar1_pw = OLSAR1(model_ols,drop1=False)
-        #print(ar1_pw.summary())
-        # the results are based on transformed model
+        #print(ar1_pw.summary())    
+        # the results are based on transformed model      
         
         # alternatively, using statsmodels' GLSAR to estimate AR(!)
         # results may not be the same as OLSAR, need to check
@@ -159,42 +140,35 @@ for ilev in range(27):
         #print ('Rho =  ', ar1_gls.rho)
         #print(results.summary())
 
-
-
         model0=ar1_co
         model1=ar1_pw
         model2=results      
         
-        lindata0[0:77,ilev,ilat]=model0.params[1::] #lm2.coef_#    
-        lindata0[77:77*2,ilev,ilat]=model0.bse[1::] #sd_b2[1::]  #
-        lindata0[77*2:77*3,ilev,ilat]=model0.pvalues[1::] #p_values2[1::]  #
-        lindata0[77*3,ilev,ilat]=model0.rsquared #lm2.score(x2, y2)  #
+        lindata0[0:77,ilev,ilat]=model0.params[1::] 
+        lindata0[77:77*2,ilev,ilat]=model0.bse[1::] 
+        lindata0[77*2:77*3,ilev,ilat]=model0.pvalues[1::] 
+        lindata0[77*3,ilev,ilat]=model0.rsquared 
         
-        lindata1[0:77,ilev,ilat]=model1.params[1::] #lm2.coef_#    
-        lindata1[77:77*2,ilev,ilat]=model1.bse[1::] #sd_b2[1::]  #
-        lindata1[77*2:77*3,ilev,ilat]=model1.pvalues[1::] #p_values2[1::]  #
-        lindata1[77*3,ilev,ilat]=model1.rsquared #lm2.score(x2, y2)  #
+        lindata1[0:77,ilev,ilat]=model1.params[1::]  
+        lindata1[77:77*2,ilev,ilat]=model1.bse[1::] 
+        lindata1[77*2:77*3,ilev,ilat]=model1.pvalues[1::] 
+        lindata1[77*3,ilev,ilat]=model1.rsquared 
         
-        lindata2[0:77,ilev,ilat]=model2.params[1::] #lm2.coef_#    
-        lindata2[77:77*2,ilev,ilat]=model2.bse[1::] #sd_b2[1::]  #
-        lindata2[77*2:77*3,ilev,ilat]=model2.pvalues[1::] #p_values2[1::]  #
-        lindata2[77*3,ilev,ilat]=model2.rsquared #lm2.score(x2, y2)  #
+        lindata2[0:77,ilev,ilat]=model2.params[1::] 
+        lindata2[77:77*2,ilev,ilat]=model2.bse[1::] 
+        lindata2[77*2:77*3,ilev,ilat]=model2.pvalues[1::] 
+        lindata2[77*3,ilev,ilat]=model2.rsquared 
         corr_1[ilev,ilat]= ar1_gls.rho[0]
 
-        ###########Check again for serial correlation in the residuals ###########
-        
+        # auto-correlation with AR1 correction (cochrane-orcutt)
         residuals2 = model0.resid
-        #corr_coeff_2 = pd.Series(residuals2.autocorr(lag=1))
-        #print(corr_coeff_2[0])    
-        #corr_2[ilev,ilat]=corr_coeff_2[0]
-        # or:
         df2 = pd.DataFrame(residuals2)
         df2_shift = df2.shift(1)
         corr_2[ilev,ilat]= df2[0].corr(df2_shift[0]) 
         
 
-'''
+# save OLS regression results based on cochrane-orcutt, prais-winsten and GLSAR to *.pickle
 write(lindata0,PathIN+'Pickle/OLS_7_'+ename+'_'+str(yr1)+'_'+str(yr2-1)+'_fz50_ERA51_2_new2_9194_ar1_co.pickle') #cochrane-orcutt with given AR(1) rho
 write(lindata1,PathIN+'Pickle/OLS_7_'+ename+'_'+str(yr1)+'_'+str(yr2-1)+'_fz50_ERA51_2_new2_9194_ar1_pw.pickle') # prais-winsten with given AR(1) rho
 write(lindata2,PathIN+'Pickle/OLS_7_'+ename+'_'+str(yr1)+'_'+str(yr2-1)+'_fz50_ERA51_2_new2_9194_ar1_gls.pickle') #using statsmodels' GLSAR to estimate AR(!)
-'''
+
