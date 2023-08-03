@@ -1,9 +1,5 @@
 # -*- coding: utf-8 -*-
-"""
-Created on Thu Sep 15 08:55:07 2022
 
-@author: a
-"""
 ####################### MLR factors ###########################
 
 import netCDF4 as nc
