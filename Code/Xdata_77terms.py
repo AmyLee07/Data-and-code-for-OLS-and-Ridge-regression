@@ -17,25 +17,28 @@ def smooth(y, box_pts):
     y_smooth = np.convolve(y,box,mode='same')
     return y_smooth
 
+# de-trending 
 def detrend(tdata):
     X = np.arange(0,len(tdata),1)
     slope, intercept, r_value, p_value, std_err = stats.linregress(X,tdata)
     coefs= poly.polyfit(X,tdata, 1)
     ffit = poly.polyval(X,coefs)
     return tdata-ffit    
-        
+
+# normalising
 def make_nterm(indata):
     q1 = np.ravel(indata[:])
     q2 = detrend(q1)
     q3 = (q2-np.min(q2))/(np.max(q2)-np.min(q2))
     return q3
 
+# save Xdata with 77 terms
 def write(data, outfile):
-        f = open(outfile, "w+b")
-        pickle.dump(data, f)
-        f.close()    
+    f = open(outfile, "w+b")
+    pickle.dump(data, f)
+    f.close()    
         
-#PathIN='S:/Leeds/Python/OLSvRidge/SData/'  
+# relatve path where climate proxies are
 PathIN='../SData/'  
 
 ############################ QBO_hPa ########################
@@ -89,7 +92,7 @@ data5 = genfromtxt(PathIN+'AAO_2.txt',skip_header=0)
 idx1=np.where((data5[:,0]>=1979)&(data5[:,0]<2021)) 
 New_AAO=np.squeeze(data5[idx1,2])  
 
-############################ Fz ########################
+############################ Fz50 ########################
 ifile01=PathIN+'Fz_north.nc'  
 vn01 = nc.Dataset(ifile01)
 plev=vn01.variables["level"][:]
@@ -98,16 +101,7 @@ ifile02=PathIN+'Fz_south.nc'
 vn02 = nc.Dataset(ifile02)
 Fz_south=vn02.variables["Fz"][:]
 New_Fz = Fz_north[:,14,0]+Fz_south[:,14,0]     #50 hPa (North+South)
-#New_Fz = Fz_north[:,18,0]+Fz_south[:,18,0]    #100 hPa
-'''
-####################### Age of air  #####################
-ifile01=PathIN+'Age_mm_T2Mz_43levs_era51_SWOOSHlat.nc'  
-vn01 = nc.Dataset(ifile01)
-#print(vn01)
-nlev=len(vn01.variables["plev"][10:37])   # 146.78~1hPa
-nlat=len(vn01.variables["lat"][3:69])     # -81.25~81.25
-age = 1E0*vn01.variables["Age_mm"][:,10:37,3:69,0]   # 
-'''
+
 ################################################################
 
 yr1=1984
@@ -121,29 +115,21 @@ nn1=x22-x1
 xx=np.arange(0,nn0)  
 
 
-###
+# detrended and normalised factors in 1984-2020
 qbo30=make_nterm(New_QBO30hPa[x1:x2])
 qbo50=make_nterm(New_QBO50hPa[x1:x2])
 solar=make_nterm(New_Solar0[x1:x2])
 enso=make_nterm(New_ERSST0[x1:x2])
 ao=make_nterm(New_AO[x1:x2])
 aao=make_nterm(New_AAO[x1:x2])            
-###
-fz_new=make_nterm(New_Fz[x1:x2])
+# Fz50 with 2-month mean values (averaged over previous and current months)
 fz=np.zeros(len(New_Fz))
 fz[0]=New_Fz[0]
-#fz[1]=New_Fz[1]
 for ixx in range(1,len(New_Fz)):
     fz[ixx]=(New_Fz[ixx-1]+New_Fz[ixx])/2
-    #fz[ixx]=(New_Fz[ixx-2]+New_Fz[ixx-1]+New_Fz[ixx])/3
 fz_new1=make_nterm(fz[x1:x2])
 
-'''
-plt.figure()
-plt.plot(fz_new)
-plt.plot(fz_new1)
-'''
-
+# plotting
 plt.figure()
 plt.subplot(421)
 plt.plot(qbo30,'',label='QBO 30hPa')
@@ -168,11 +154,12 @@ plt.subplot(427)
 plt.plot(fz_new,'b',label='Fz')
 plt.legend(loc='right')
 plt.tight_layout()
+#
 
 nlev=27
 nlat=66
-# save or write .out
-Vdata = np.zeros((nn0,nlev,nlat,77))   #43,64 for ERAx and MLS
+# save Xdata/proxy_data to *.out
+Vdata = np.zeros((nn0,nlev,nlat,77))   
 for ll in range(0,nlev):
     for l in range(0,nlat):
         for m in range(0,12):
@@ -181,8 +168,7 @@ for ll in range(0,nlev):
             Vdata[m1,ll,l,m+12]=np.ones(1998-yr1)
             m2 = np.arange(m+nn1,nn0,12)            
             Vdata[m2,ll,l,m+24]=np.arange(0.5,yr2-1998+0.5,1)
-            Vdata[m2,ll,l,m+36]=np.ones(yr2-1998)
-            
+            Vdata[m2,ll,l,m+36]=np.ones(yr2-1998)           
             mm = np.arange(m,nn0,12)
             Vdata[mm,ll,l,m+48]=qbo30[mm]
             Vdata[mm,ll,l,m+60]=qbo50[mm]
@@ -190,9 +176,8 @@ for ll in range(0,nlev):
         Vdata[:,ll,l,72]=fz_new1[:]
         Vdata[:,ll,l,73]=solar[:]
         Vdata[:,ll,l,74]=enso[:]
-        Vdata[:,ll,l,75]=ao[:]  #smooth(ao[:],3)
-        Vdata[:,ll,l,76]=aao[:] #
-
-
+        Vdata[:,ll,l,75]=ao[:]  
+        Vdata[:,ll,l,76]=aao[:] 
+        
 proxy_data = Vdata
 write(proxy_data, PathIN+'Xdata_7_'+str(yr1)+'_'+str(yr2-1)+'_77Params_era51_72lats_fz50_nh_sh_new.out')  
