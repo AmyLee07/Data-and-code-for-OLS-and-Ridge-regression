@@ -5,11 +5,11 @@ Data and code for OLS and Ridge regression
 
 The MLR setup has 77 terms, including 24 monthly linear trend terms and 24 intercept terms for the independent linear trends (ILT) before and after the turnaround year (1997) close to the timing of the peak stratospheric halogen loading, 24 QBO terms at 30 and 50 hPa, and 5 proxies for the 11-year solar cycle, El-Nino Southern Oscillation (ENSO), Arctic Oscillation (AO), Antarctic Oscillation (AAO) and Eliassen-Palm (EP) flux. The monthly mean ozone anomaly time series from 1984-2020 are obtained by referencing the monthly mean O~3~(t) to the climatological mean for each calendar month.
 
-- QBO, ENSO, AO and AAO indices are from Climate Prediction Center (<https://www.cpc.ncep.noaa.gov/>)
+QBO, ENSO, AO and AAO indices are from Climate Prediction Center (<https://www.cpc.ncep.noaa.gov/>)
 
-- Mg II solar flux term (MgII) is obtained from [http://www.iup.uni-bremen.de/UVSAT/ Datasets/mgii](http://www.iup.uni-bremen.de/UUVSAT/Datasets/mgii)
+Mg II solar flux term (MgII) is obtained from [http://www.iup.uni-bremen.de/UVSAT/ Datasets/mgii](http://www.iup.uni-bremen.de/UUVSAT/Datasets/mgii)
 
-- EP flux uses the 50 hPa vertical component (Fz50) with 2-month mean values (averaged over previous and current months) integrated over mid-latitudes between 45^○^ and 75^○^ in each hemisphere from the ECMWF ERA5 reanalysis.
+EP flux uses the 50 hPa vertical component (Fz50) with 2-month mean values (averaged over previous and current months) integrated over mid-latitudes between 45deg and 75deg in each hemisphere from the ECMWF ERA5 reanalysis.
 
 
 * All data for the climate proxies and the stratospheic ozone data from SWOOSH, ML-TOMCAT and model simulation ERA5 are available in the directory ./SData/
