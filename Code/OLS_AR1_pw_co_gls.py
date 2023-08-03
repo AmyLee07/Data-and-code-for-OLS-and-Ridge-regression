@@ -1,9 +1,4 @@
 # -*- coding: utf-8 -*-
-"""
-Created on Fri Jul 21 14:15:38 2023
-
-@author: a
-"""
 
 #import netCDF4 as nc
 import numpy as np
