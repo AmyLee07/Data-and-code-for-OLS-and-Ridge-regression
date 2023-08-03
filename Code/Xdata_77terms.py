@@ -151,7 +151,7 @@ plt.plot(smooth(aao[:],3),'c',label='AAO')
 plt.legend(loc='right')
 plt.tight_layout()
 plt.subplot(427)
-plt.plot(fz_new,'b',label='Fz')
+plt.plot(fz_new1,'b',label='Fz')
 plt.legend(loc='right')
 plt.tight_layout()
 #
