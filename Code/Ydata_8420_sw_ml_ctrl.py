@@ -1,15 +1,9 @@
 # -*- coding: utf-8 -*-
-"""
-Created on Fri Dec  9 14:15:29 2022
-
-@author: a
-"""
 
 import netCDF4 as nc
 import numpy as np
 import matplotlib.pyplot as plt
 import pickle
-
 
 yr1=1984
 yr2=2021
@@ -20,36 +14,32 @@ nn0=x2-x1
 #PathIN='S:/Leeds/Python/OLSvRidge/SData/'  
 PathIN='../SData/'  
 
-
 # swoosh #
 ifile1=PathIN+'SWOOSH_1979_2021_72_V2.nc'    #
 vn1= nc.Dataset(ifile1)
 #print(vn1)
 lat1 = vn1.variables["lat"][3:69]      #72  (-88.75,88.75)  -81.25~81.25
 plev1 = vn1.variables["plev"][10:37]   #43  (1000-0,1hPa)   146.78~1hPa
-time1 = vn1.variables["time"][:]   #516
+time1 = vn1.variables["time"][:]       #516
 SW_O3 = vn1.variables["O3"][x1:x2,10:37,3:69,0]    
 
- 
 # era5 #
 ifile2=PathIN+'CONTROL_1979_2021_72_vmr_plev_V2.nc'
 vn2= nc.Dataset(ifile2)
 #print(vn2)
-lat2 = vn2.variables["lat"][3:69]     #72
-plev2 = vn2.variables["plev"][10:37]   #43
-time2 = vn2.variables["time"][:]   #516
+lat2 = vn2.variables["lat"][3:69]     
+plev2 = vn2.variables["plev"][10:37]   
+time2 = vn2.variables["time"][:]   
 CTL_O3 = vn2.variables["O3"][x1:x2,10:37,3:69,0]   
-
 
 # ml-tomcat #
 ifile3=PathIN+'ML-TOMCAT_1979_2021_72_vmr_plev_V2.nc'  
 vn3= nc.Dataset(ifile3)
 #print(vn3)
-lat3 = vn3.variables["lat"][3:69]     #72
-plev3 = vn3.variables["plev"][10:37]   #43
-time3 = vn3.variables["time"][:]   #516
+lat3 = vn3.variables["lat"][3:69]    
+plev3 = vn3.variables["plev"][10:37]   
+time3 = vn3.variables["time"][:]   
 ML_O3 = vn3.variables["O3"][x1:x2,10:37,3:69,0]  
-
 
 nlev=len(plev1)  # 27
 nlat=len(lat1)   # 66
@@ -126,7 +116,6 @@ def write(data, outfile):
     f = open(outfile, "w+b")
     pickle.dump(data, f)
     f.close()        
-
 
 write(SW_O3_anom, PathIN+'Ydata_2_'+str(yr1)+'_'+str(yr2-1)+'_dO3_SWOOSH_v7.nc')
 write(CTL_O3_anom, PathIN+'Ydata_2_'+str(yr1)+'_'+str(yr2-1)+'_dO3_CONTROL.nc')
