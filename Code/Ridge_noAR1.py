@@ -1,9 +1,5 @@
 # -*- coding: utf-8 -*-
-"""
-Created on Sat Jan  7 09:07:26 2023
 
-@author: bxl
-"""
 #import netCDF4 as nc
 import numpy as np
 #import matplotlib.pyplot as plt
